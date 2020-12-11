@@ -77,7 +77,8 @@ def scrape():
     # Scrape 4 : Mars Facts
     url4 = "https://space-facts.com/mars/"
 
-    facts = pd.read_html(url4)
+    facts = pd.read_html(url4)[0]
+    facts = facts.to_html(classes="table")
 
     print("Mars Facsts")
     print("-------------------------")
@@ -87,21 +88,34 @@ def scrape():
 
     # Scrape 5 : Mars Hemispheres Pictures 
     
-    browser.visit("https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars")
-    html5 = browser.html
-    soup5 = BeautifulSoup(html5, "html.parser")
-    base_url= "https://astropedia.astrogeology.usgs.gov/download/Mars/Viking/"
-    list_items = soup.find_all("div", class_="description")
+    url="https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars"
+    response=requests.get(url)
+    soup5=BeautifulSoup(response.text,"html.parser")
+    hemi_text=soup5.find_all("div",class_="item")
+    hemisphere_image_urls=[]
+    for i in hemi_text:
+        string=i.a.img["src"]
+        desc=i.div.h3.text.rstrip(" Enhanced")
+        hemisphere_image_urls.append(
+        {
+            "Desc":desc,
+            "URL":f"https://astrogeology.usgs.gov/{string}"
+        }
+        )
 
     #create Dictrionary
-    hemisphere_image_urls = []
+    
     print("Mars Hemispheres Pictures Links")
     print("-------------------------")
     print(hemisphere_image_urls)
 
-    mars_dict["hemisphere_image_urls"] = hemisphere_image_urls
+    mars_dict["hemisphereimg"] = hemisphere_image_urls
 
     # Close browser
     browser.quit()
 
     return mars_dict
+
+
+
+    

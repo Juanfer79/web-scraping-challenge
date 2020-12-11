@@ -1,40 +1,27 @@
-from flask import Flask, render_template, redirect, url_for, Markup
+from flask import Flask,render_template,Markup
 import pymongo
 import scrape_mars
 
-app = Flask(__name__)
+app=Flask(__name__)
 
-# connect database
 conn = "mongodb://localhost:27017"
 client = pymongo.MongoClient(conn)
-database = client.mars_database
-
+db = client.mars_db
 
 @app.route("/")
 def index():
-    marsdb_dict = {}
-    marsdb_dict = db.mars_dict.find_one()
-    is_empty=False
-
-    # Check if it is the first time so the dictionary doesn't have any information
-    if not bool(marsdb_dict):
-        is_empty = True
-        print ("Dictionary is Empty")
-
-    return render_template("index.html", mars=marsdb_dict, is_empty=is_empty)
+    mars_db=db.mars.find_one()
+    return render_template("index.html",mars_dict=mars_db)
 
 @app.route("/scrape")
-def scrape():
-    # call the function on the scrape_mars.py
-    marsdb_dict = scrape_mars.scrape()
-    # clean the collection
-    db.mars_dict.drop()
-    # save it in MongoDB
-    db.mars_dict.insert(marsdb_dict)
-
-    return render_template("index.html", mars=marsdb_dict)
-    #return redirect(url_for("index", mars=mars_dict))
-
+def scraper():
+    db.mars.drop()
+    mars_db=scrape_mars.scrape()
+    print(mars_db)
+    print(type(mars_db))
+    #db.mars.insert(mars_db.to_dict(orient="records"))
+    db.mars.insert(mars_db)
+    return render_template("index.html", mars_dict=mars_db)
 
 if __name__ == "__main__":
     app.run(debug=True)
